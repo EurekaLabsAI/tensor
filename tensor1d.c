@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
     // slice the tensor as t[5:15:1]
     Tensor* s = tensor_slice(t, 5, 15, 1);
     tensor_print(s);
-    // slice that tensor as s[2:7]
+    // slice that tensor as s[2:7:2]
     Tensor* ss = tensor_slice(s, 2, 7, 2);
     tensor_print(ss);
     // print element -1
