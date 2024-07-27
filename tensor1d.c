@@ -10,6 +10,7 @@ gcc -O3 -shared -fPIC -o libtensor1d.so tensor1d.c
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <assert.h>
 #include "tensor1d.h"
 
@@ -26,11 +27,15 @@ void *malloc_check(size_t size, const char *file, int line) {
 }
 
 // ----------------------------------------------------------------------------
-// tensor 1D
+// utils
 
 inline int ceil_div(int a, int b) {
+    // integer division that rounds up, i.e. ceil(a / b)
     return (a + b - 1) / b;
 }
+
+// ----------------------------------------------------------------------------
+// Tensor class functions
 
 // torch.empty(size)
 Tensor* tensor_empty(int size) {
@@ -42,9 +47,11 @@ Tensor* tensor_empty(int size) {
     // create the tensor
     Tensor* t = malloc(sizeof(Tensor));
     t->storage = storage;
-    t->size = size;
+    // at init we cover the whole storage, i.e. range(start=0, stop=size, step=1)
     t->offset = 0;
+    t->size = size;
     t->stride = 1;
+    // holds the text representation of the tensor
     t->repr = NULL;
     return t;
 }
@@ -58,57 +65,66 @@ Tensor* tensor_arange(int size) {
     return t;
 }
 
-inline int logical_to_physical(Tensor *t, int ix) {
-    return t->offset + ix * t->stride;;
+int logical_to_physical(Tensor *t, int ix) {
+    int idx = t->offset + ix * t->stride;
+    assert(idx >= 0 && idx < t->storage->data_size);
+    return idx;
 }
 
+// Index into the tensor.
+// Note that both PyTorch and numpy actually return a 1-element Tensor when you index like:
 // val = t[ix]
-inline float tensor_getitem(Tensor* t, int ix) {
+// This particular function returns the actual float, i.e.:
+// val = t[ix].item()
+float tensor_getitem(Tensor* t, int ix) {
     // handle negative indices by wrapping around
     if (ix < 0) { ix = t->size + ix; }
-    int idx = logical_to_physical(t, ix);
-    // handle out of bounds indices
-    if(idx >= t->storage->data_size) {
-        fprintf(stderr, "Error: Index %d out of bounds of %d\n", ix, t->storage->data_size);
-        return -1.0f;
+    // oob indices raise IndexError (and we return NaN)
+    if (ix >= t->size) {
+        fprintf(stderr, "IndexError: index %d is out of bounds of %d\n", ix, t->size);
+        return NAN;
     }
+    // get the physical index into the storage and return the value
+    int idx = logical_to_physical(t, ix);
     float val = t->storage->data[idx];
     return val;
 }
 
-// t[ix] = val
-inline void tensor_setitem(Tensor* t, int ix, float val) {
-    // handle negative indices by wrapping around
-    if (ix < 0) { ix = t->size + ix; }
-    int idx = logical_to_physical(t, ix);
-    // handle out of bounds indices
-    if(idx >= t->storage->data_size) {
-        fprintf(stderr, "Error: Index %d out of bounds of %d\n", ix, t->storage->data_size);
-    }
-    t->storage->data[idx] = val;
-}
-
-// PyTorch (and numpy) actually return a size-1 Tensor when you index like:
+// The _astensor version of getitem:
 // val = t[ix]
-// so in this version, we do the same by creating a size-1 slice
+// i.e. consistent with PyTorch/numpy create a 1-element Tensor and return it
 Tensor* tensor_getitem_astensor(Tensor* t, int ix) {
     // wrap around negative indices so we can do +1 below with confidence
     if (ix < 0) { ix = t->size + ix; }
+    // effectively: t[ix:ix+1:1] <=> t[ix:ix+1] <=> t[ix]
     Tensor* slice = tensor_slice(t, ix, ix + 1, 1);
     return slice;
 }
 
-// same as torch.Tensor .item() function that strips 1-element Tensor to simple scalar
+// t[ix] = val
+void tensor_setitem(Tensor* t, int ix, float val) {
+    // handle negative indices by wrapping around
+    if (ix < 0) { ix = t->size + ix; }
+    if (ix >= t->size) {
+        fprintf(stderr, "IndexError: index %d is out of bounds of %d\n", ix, t->size);
+        return;
+    }
+    int idx = logical_to_physical(t, ix);
+    t->storage->data[idx] = val;
+}
+
+// same as .item() on a torch.Tensor: strips 1-element Tensor to simple scalar
 float tensor_item(Tensor* t) {
     if (t->size != 1) {
         fprintf(stderr, "ValueError: can only convert an array of size 1 to a Python scalar\n");
-        return -1.0f;
+        return NAN;
     }
     return tensor_getitem(t, 0);
 }
 
+// return a new Tensor with a new view, but same Storage, i.e.:
+// t[start:end:step]
 Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
-    // return a new Tensor with a new view, but same Storage
     // 1) handle negative indices by wrapping around
     if (start < 0) { start = t->size + start; }
     if (end < 0) { end = t->size + end; }
@@ -134,20 +150,17 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     s->size = ceil_div(end - start, step);
     s->offset = t->offset + start * t->stride;
     s->stride = t->stride * step;
-    tensor_incref(s);
+    tensor_incref(s); // reference counting for the shared Storage
     return s;
 }
 
 char* tensor_to_string(Tensor* t) {
     // if we already have a string representation, return it
-    if (t->repr != NULL) {
-        return t->repr;
-    }
+    if (t->repr != NULL) { return t->repr; }
     // otherwise create a new string representation
     int max_size = t->size * 20 + 3; // 20 chars/number, brackets and commas
     t->repr = malloc(max_size);
     char* current = t->repr;
-
     current += sprintf(current, "[");
     for (int i = 0; i < t->size; i++) {
         float val = tensor_getitem(t, i);
@@ -157,7 +170,7 @@ char* tensor_to_string(Tensor* t) {
         }
     }
     current += sprintf(current, "]");
-    // check that we didn't write past the end of the buffer
+    // ensure we didn't write past the end of the buffer
     assert(current - t->repr < max_size);
     return t->repr;
 }
@@ -201,6 +214,7 @@ int main(int argc, char *argv[]) {
     Tensor* ss = tensor_slice(s, 2, 7, 2);
     tensor_print(ss);
     // print element -1
-    printf("ss[-1] = %.1f\n", tensor_getitem(ss, -1));
+    float val = tensor_getitem(ss, -1);
+    printf("ss[-1] = %.1f\n", val);
     return 0;
 }
