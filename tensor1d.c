@@ -216,6 +216,29 @@ void tensor_free(Tensor* t) {
     free(t);
 }
 
+// Element-wise addition of two tensors
+// Returns a new tensor with the result
+Tensor* tensor_add(Tensor* t1, Tensor* t2) {
+    // Check if sizes match
+    if (t1->size != t2->size) {
+        fprintf(stderr, "ValueError: Tensor sizes must match for addition\n");
+        return NULL;
+    }
+
+    // Create a new tensor with the same size
+    Tensor* result = tensor_empty(t1->size);
+
+    // Perform element-wise addition
+    for (int i = 0; i < t1->size; i++) {
+        float val1 = tensor_getitem(t1, i);
+        float val2 = tensor_getitem(t2, i);
+        tensor_setitem(result, i, val1 + val2);
+    }
+
+    return result;
+}
+
+
 // ----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
@@ -231,5 +254,14 @@ int main(int argc, char *argv[]) {
     // print element -1
     float val = tensor_getitem(ss, -1);
     printf("ss[-1] = %.1f\n", val);
+    // Add two tensors
+    fprintf(stdout, "Adding two tensors:\n");
+    Tensor* t1 = tensor_arange(5);
+    tensor_print(t1);
+    Tensor* t2 = tensor_arange(5);
+    tensor_print(t2);
+    Tensor* t3 = tensor_add(t1, t2);
+    tensor_print(t3);
+
     return 0;
 }
