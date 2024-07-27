@@ -37,4 +37,10 @@ void tensor_incref(Tensor* t);
 void tensor_decref(Tensor* t);
 void tensor_free(Tensor* t);
 
+Tensor* tensor_add(Tensor* a, Tensor* b);
+Tensor* tensor_sub(Tensor* a, Tensor* b);
+Tensor* tensor_mul(Tensor* a, Tensor* b);
+
+
+
 #endif // TENSOR1D_H
