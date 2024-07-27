@@ -33,6 +33,23 @@ print(t[5:15:2])
 # slice of a slice works ok! prints [9, 11, 13]
 # (note how the end range is oob and gets cropped)
 print(t[5:15:2][2:7])
+
+# Create another tensor for operations
+t2 = tensor1d.arange(20)
+print("t:", t)
+print("t2:", t2)
+
+# Perform addition
+t_add = t.add(t2)
+print("Addition:", t_add)
+
+# Perform subtraction
+t_sub = t.sub(t2)
+print("Subtraction:", t_sub)
+
+# Perform multiplication
+t_mul = t.mul(t2)
+print("Multiplication:", t_mul)
 ```
 
 Finally the tests use [pytest](https://docs.pytest.org/en/stable/) and can be found in [test_tensor1d.py](test_tensor1d.py). You can run this as `pytest test_tensor1d.py`.
