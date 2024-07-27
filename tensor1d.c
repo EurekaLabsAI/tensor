@@ -174,7 +174,7 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
         return tensor_empty(0);
     }
     // create the new Tensor: same Storage but new View
-    Tensor* s = malloc(sizeof(Tensor));
+    Tensor* s = mallocCheck(sizeof(Tensor));
     s->storage = t->storage; // inherit the underlying storage!
     s->size = ceil_div(end - start, step);
     s->offset = t->offset + start * t->stride;
@@ -188,7 +188,7 @@ char* tensor_to_string(Tensor* t) {
     if (t->repr != NULL) { return t->repr; }
     // otherwise create a new string representation
     int max_size = t->size * 20 + 3; // 20 chars/number, brackets and commas
-    t->repr = malloc(max_size);
+    t->repr = mallocCheck(max_size);
     char* current = t->repr;
     current += sprintf(current, "[");
     for (int i = 0; i < t->size; i++) {
