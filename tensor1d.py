@@ -31,6 +31,7 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step);
 void tensor_incref(Tensor* t);
 void tensor_decref(Tensor* t);
 void tensor_free(Tensor* t);
+Tensor* tensor_add(Tensor* t1, Tensor* t2);
 """)
 lib = ffi.dlopen("./libtensor1d.so")  # Make sure to compile the C code into a shared library
 # -----------------------------------------------------------------------------
@@ -89,6 +90,17 @@ class Tensor:
         c_str = lib.tensor_to_string(self.tensor)
         py_str = ffi.string(c_str).decode('utf-8')
         return py_str
+
+    def __add__(self, other):
+        # Scalar addition support
+        if isinstance(other, (int, float)):
+            other = Tensor([other] * len(self))
+        if not isinstance(other, Tensor):
+            raise TypeError("Unsupported operand type(s) for +: '{}' and '{}'".format(type(self).__name__, type(other).__name__))
+        if len(self) != len(other):
+            raise ValueError("Tensor sizes must match for addition")
+        c_result = lib.tensor_add(self.tensor, other.tensor)
+        return Tensor(c_tensor=c_result)
 
     def tolist(self):
         return [lib.tensor_getitem(self.tensor, i) for i in range(len(self))]
