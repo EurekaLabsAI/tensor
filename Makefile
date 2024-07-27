@@ -2,6 +2,13 @@ CC = gcc
 CFLAGS = -Wall -O3
 LDFLAGS = -lm
 
+# turn on all the warnings
+# https://github.com/mcinglis/c-style
+CFLAGS += -Wall -Wextra -Wpedantic \
+          -Wformat=2 -Wno-unused-parameter -Wshadow \
+          -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
+          -Wredundant-decls -Wnested-externs -Wmissing-include-dirs
+
 # Main targets
 all: tensor1d libtensor1d.so
 
@@ -21,4 +28,4 @@ clean:
 test:
 	pytest
 
-.PHONY: all clean test
+.PHONY: all clean test tensor1d
