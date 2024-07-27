@@ -184,3 +184,40 @@ def test_setitem_indirect():
     tensor1d_view[-1] = 200
     assert_tensor_equal(torch_tensor, tensor1d_tensor)
 
+# Tests for add, sub, mul, div operations
+@pytest.mark.parametrize("size", [0, 1, 10, 100])
+def test_add(size):
+    torch_tensor1 = torch.arange(size)
+    torch_tensor2 = torch.arange(size)
+    tensor1d_tensor1 = tensor1d.arange(size)
+    tensor1d_tensor2 = tensor1d.arange(size)
+
+    torch_result = torch_tensor1 + torch_tensor2
+    tensor1d_result = tensor1d_tensor1.add(tensor1d_tensor2)
+
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+@pytest.mark.parametrize("size", [0, 1, 10, 100])
+def test_sub(size):
+    torch_tensor1 = torch.arange(size)
+    torch_tensor2 = torch.arange(size)
+    tensor1d_tensor1 = tensor1d.arange(size)
+    tensor1d_tensor2 = tensor1d.arange(size)
+
+    torch_result = torch_tensor1 - torch_tensor2
+    tensor1d_result = tensor1d_tensor1.sub(tensor1d_tensor2)
+
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+@pytest.mark.parametrize("size", [0, 1, 10, 100])
+def test_mul(size):
+    torch_tensor1 = torch.arange(size)
+    torch_tensor2 = torch.arange(size)
+    tensor1d_tensor1 = tensor1d.arange(size)
+    tensor1d_tensor2 = tensor1d.arange(size)
+
+    torch_result = torch_tensor1 * torch_tensor2
+    tensor1d_result = tensor1d_tensor1.mul(tensor1d_tensor2)
+
+    assert_tensor_equal(torch_result, tensor1d_result)
+
