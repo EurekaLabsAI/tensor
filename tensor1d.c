@@ -30,7 +30,7 @@ void *malloc_check(size_t size, const char *file, int line) {
 // ----------------------------------------------------------------------------
 // utils
 
-inline int ceil_div(int a, int b) {
+int ceil_div(int a, int b) {
     // integer division that rounds up, i.e. ceil(a / b)
     return (a + b - 1) / b;
 }
@@ -41,6 +41,7 @@ inline int ceil_div(int a, int b) {
 // similar to torch.Storage
 
 Storage* storage_new(int size) {
+    assert(size > 0);
     Storage* storage = mallocCheck(sizeof(Storage));
     storage->data = mallocCheck(size * sizeof(float));
     storage->data_size = size;
@@ -157,11 +158,9 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     // 1) handle negative indices by wrapping around
     if (start < 0) { start = t->size + start; }
     if (end < 0) { end = t->size + end; }
-    // 2) handle out-of-bounds indices: clip to 0 and t->size
-    if (start < 0) { start = 0; }
-    if (end < 0) { end = 0; }
-    if (start > t->size) { start = t->size; }
-    if (end > t->size) { end = t->size; }
+    // 2) handle out-of-bounds indices: clip to [0, t->size] range
+    start = fmin(fmax(start, 0), t->size);
+    end = fmin(fmax(end, 0), t->size);
     // 3) handle step
     if (step == 0) {
         fprintf(stderr, "ValueError: slice step cannot be zero\n");

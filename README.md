@@ -5,7 +5,7 @@ In this module we build a small `Tensor` in C, along the lines of `torch.Tensor`
 The source code of the 1D Tensor is in [tensor1d.h](tensor1d.h) and [tensor1d.c](tensor1d.c). You can compile and run this simply as:
 
 ```bash
-gcc -Wall -O3 tensor1d.c -o tensor1d
+gcc -Wall -O3 tensor1d.c -o tensor1d -lm
 ./tensor1d
 ```
 
