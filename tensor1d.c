@@ -179,6 +179,7 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     s->size = ceil_div(end - start, step);
     s->offset = t->offset + start * t->stride;
     s->stride = t->stride * step;
+    s->repr = NULL;
     storage_incref(s->storage); // increment the reference count
     return s;
 }
