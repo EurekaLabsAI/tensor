@@ -184,3 +184,26 @@ def test_setitem_indirect():
     tensor1d_view[-1] = 200
     assert_tensor_equal(torch_tensor, tensor1d_tensor)
 
+# Test addition
+def test_addition():
+    a = 5  # Integer scalar
+    b = tensor1d.arange(10)  # 10 element Tensor
+    c = tensor1d.arange(4)  # 4 element Tensor
+    d = tensor1d.tensor([4, 3, 2, 1])  # 4 element Tensor
+    e = 3.5  # Float scalar
+
+    # Scalar + tensor
+    x = b + a
+    assert x.tolist() == [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    # Tensor + tensor (mismatched sizes)
+    with pytest.raises(ValueError):
+        y = b + c
+
+    # Tensor + tensor (matched sizes)
+    z = c + d
+    assert z.tolist() == [4, 4, 4, 4]
+
+    # Float scalar + tensor
+    f = b + e
+    assert f.tolist() == [3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]
