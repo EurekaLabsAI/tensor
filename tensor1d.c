@@ -95,6 +95,51 @@ Tensor* tensor_arange(int size) {
     return t;
 }
 
+// Add two tensors
+Tensor* tensor_add(Tensor* a, Tensor* b) {
+    if (a->size != b->size) {
+        fprintf(stderr, "ValueError: Tensors must have the same size\n");
+        return NULL;
+    }
+    Tensor* result = tensor_empty(a->size);
+    for (int i = 0; i < a->size; i++) {
+        float val = tensor_getitem(a, i) + tensor_getitem(b, i);
+        tensor_setitem(result, i, val);
+    }
+    return result;
+}
+
+// Subtract two tensors
+Tensor* tensor_sub(Tensor* a, Tensor* b) {
+    if (a->size != b->size) {
+        fprintf(stderr, "ValueError: Tensors must have the same size\n");
+        return NULL;
+    }
+    Tensor* result = tensor_empty(a->size);
+    for (int i = 0; i < a->size; i++) {
+        float val = tensor_getitem(a, i) - tensor_getitem(b, i);
+        tensor_setitem(result, i, val);
+    }
+    return result;
+}
+
+// Multiply two tensors
+Tensor* tensor_mul(Tensor* a, Tensor* b) {
+    if (a->size != b->size) {
+        fprintf(stderr, "ValueError: Tensors must have the same size\n");
+        return NULL;
+    }
+    Tensor* result = tensor_empty(a->size);
+    for (int i = 0; i < a->size; i++) {
+        float val = tensor_getitem(a, i) * tensor_getitem(b, i);
+        tensor_setitem(result, i, val);
+    }
+    return result;
+}
+
+
+
+
 int logical_to_physical(Tensor *t, int ix) {
     int idx = t->offset + ix * t->stride;
     return idx;
