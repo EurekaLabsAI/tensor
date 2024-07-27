@@ -31,6 +31,10 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step);
 void tensor_incref(Tensor* t);
 void tensor_decref(Tensor* t);
 void tensor_free(Tensor* t);
+
+Tensor* tensor_add(Tensor* a, Tensor* b);
+Tensor* tensor_sub(Tensor* a, Tensor* b);
+Tensor* tensor_mul(Tensor* a, Tensor* b);
 """)
 lib = ffi.dlopen("./libtensor1d.so")  # Make sure to compile the C code into a shared library
 # -----------------------------------------------------------------------------
@@ -95,6 +99,20 @@ class Tensor:
 
     def item(self):
         return lib.tensor_item(self.tensor)
+    
+    def add(self, other):
+        c_tensor = lib.tensor_add(self.tensor, other.tensor)
+        return Tensor(c_tensor=c_tensor)
+
+    def sub(self, other):
+        c_tensor = lib.tensor_sub(self.tensor, other.tensor)
+        return Tensor(c_tensor=c_tensor)
+
+    def mul(self, other):
+        c_tensor = lib.tensor_mul(self.tensor, other.tensor)
+        return Tensor(c_tensor=c_tensor)
+
+
 
 def empty(size):
     return Tensor(size)
