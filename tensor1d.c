@@ -25,6 +25,7 @@ void *malloc_check(size_t size, const char *file, int line) {
     }
     return ptr;
 }
+#define mallocCheck(size) malloc_check(size, __FILE__, __LINE__)
 
 // ----------------------------------------------------------------------------
 // utils
@@ -35,18 +36,47 @@ inline int ceil_div(int a, int b) {
 }
 
 // ----------------------------------------------------------------------------
+// Storage: simple array of floats, defensive on index access, reference-counted
+// The reference counting allows multiple Tensors sharing the same Storage.
+// similar to torch.Storage
+
+Storage* storage_new(int size) {
+    Storage* storage = mallocCheck(sizeof(Storage));
+    storage->data = mallocCheck(size * sizeof(float));
+    storage->data_size = size;
+    storage->ref_count = 1;
+    return storage;
+}
+
+float storage_getitem(Storage* s, int idx) {
+    assert(idx >= 0 && idx < s->data_size);
+    return s->data[idx];
+}
+
+void storage_setitem(Storage* s, int idx, float val) {
+    assert(idx >= 0 && idx < s->data_size);
+    s->data[idx] = val;
+}
+
+void storage_incref(Storage* s) {
+    s->ref_count++;
+}
+
+void storage_decref(Storage* s) {
+    s->ref_count--;
+    if (s->ref_count == 0) {
+        free(s->data);
+        free(s);
+    }
+}
+
+// ----------------------------------------------------------------------------
 // Tensor class functions
 
 // torch.empty(size)
 Tensor* tensor_empty(int size) {
-    // create the storage
-    Storage* storage = malloc(sizeof(Storage));
-    storage->data = malloc(size * sizeof(float));
-    storage->data_size = size;
-    storage->ref_count = 1;
-    // create the tensor
-    Tensor* t = malloc(sizeof(Tensor));
-    t->storage = storage;
+    Tensor* t = mallocCheck(sizeof(Tensor));
+    t->storage = storage_new(size);
     // at init we cover the whole storage, i.e. range(start=0, stop=size, step=1)
     t->offset = 0;
     t->size = size;
@@ -67,7 +97,6 @@ Tensor* tensor_arange(int size) {
 
 int logical_to_physical(Tensor *t, int ix) {
     int idx = t->offset + ix * t->stride;
-    assert(idx >= 0 && idx < t->storage->data_size);
     return idx;
 }
 
@@ -86,7 +115,7 @@ float tensor_getitem(Tensor* t, int ix) {
     }
     // get the physical index into the storage and return the value
     int idx = logical_to_physical(t, ix);
-    float val = t->storage->data[idx];
+    float val = storage_getitem(t->storage, idx);
     return val;
 }
 
@@ -110,7 +139,7 @@ void tensor_setitem(Tensor* t, int ix, float val) {
         return;
     }
     int idx = logical_to_physical(t, ix);
-    t->storage->data[idx] = val;
+    storage_setitem(t->storage, idx, val);
 }
 
 // same as .item() on a torch.Tensor: strips 1-element Tensor to simple scalar
@@ -150,7 +179,7 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     s->size = ceil_div(end - start, step);
     s->offset = t->offset + start * t->stride;
     s->stride = t->stride * step;
-    tensor_incref(s); // reference counting for the shared Storage
+    storage_incref(s->storage); // increment the reference count
     return s;
 }
 
@@ -181,22 +210,8 @@ void tensor_print(Tensor* t) {
     free(str);
 }
 
-// reference counting functions so we know when to deallocate Storage
-// (there can be multiple Tensors with different View that share the same Storage)
-void tensor_incref(Tensor* t) {
-    t->storage->ref_count++;
-}
-
-void tensor_decref(Tensor* t) {
-    t->storage->ref_count--;
-    if (t->storage->ref_count == 0) {
-        free(t->storage->data);
-        free(t->storage);
-    }
-}
-
 void tensor_free(Tensor* t) {
-    tensor_decref(t); // storage-related cleanups
+    storage_decref(t->storage);
     free(t->repr);
     free(t);
 }
