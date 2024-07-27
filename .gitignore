@@ -1,0 +1,8 @@
+# Cache files
+__pycache__
+*.pyc
+.pytest_cache
+
+# Build files
+*.so
+*.o
