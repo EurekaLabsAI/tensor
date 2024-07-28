@@ -35,13 +35,21 @@ int ceil_div(int a, int b) {
     return (a + b - 1) / b;
 }
 
+int min(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
 // ----------------------------------------------------------------------------
 // Storage: simple array of floats, defensive on index access, reference-counted
 // The reference counting allows multiple Tensors sharing the same Storage.
 // similar to torch.Storage
 
 Storage* storage_new(int size) {
-    assert(size > 0);
+    assert(size >= 0);
     Storage* storage = mallocCheck(sizeof(Storage));
     storage->data = mallocCheck(size * sizeof(float));
     storage->data_size = size;
@@ -159,8 +167,8 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     if (start < 0) { start = t->size + start; }
     if (end < 0) { end = t->size + end; }
     // 2) handle out-of-bounds indices: clip to [0, t->size] range
-    start = fmin(fmax(start, 0), t->size);
-    end = fmin(fmax(end, 0), t->size);
+    start = min(max(start, 0), t->size);
+    end = min(max(end, 0), t->size);
     // 3) handle step
     if (step == 0) {
         fprintf(stderr, "ValueError: slice step cannot be zero\n");
