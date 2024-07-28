@@ -52,11 +52,12 @@ class Tensor:
             raise TypeError("Input must be an integer size or a list/range of values")
 
     def __del__(self):
-        # TODO: when Python intepreter is shutting down, lib can become None
-        # I'm not 100% sure how to do cleanup in cffi here properly
-        if lib is not None:
+        # Proper cleanup with a try-except block
+        try:
             if hasattr(self, 'tensor'):
                 lib.tensor_free(self.tensor)
+        except NameError:
+            pass  # If lib is not available (interpreter shutdown), skip cleanup
 
     def __getitem__(self, key):
         if isinstance(key, int):
