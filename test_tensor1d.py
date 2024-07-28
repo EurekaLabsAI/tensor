@@ -7,7 +7,7 @@ def assert_tensor_equal(torch_tensor, tensor1d_tensor):
 
 @pytest.mark.parametrize("size", [0, 1, 10, 100])
 def test_arange(size):
-    torch_tensor = torch.arange(size)
+    torch_tensor = torch.arange(size, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(size)
     assert_tensor_equal(torch_tensor, tensor1d_tensor)
 
@@ -23,9 +23,9 @@ def test_empty(size):
     tensor1d_tensor = tensor1d.empty(size)
     assert len(torch_tensor) == len(tensor1d_tensor)
 
-@pytest.mark.parametrize("index", range(0, 10))
+@pytest.mark.parametrize("index", range(1, 10))
 def test_indexing(index):
-    torch_tensor = torch.arange(10)
+    torch_tensor = torch.arange(10, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(10)
     assert torch_tensor[index].item() == tensor1d_tensor[index].item()
 
@@ -36,15 +36,16 @@ def test_indexing(index):
     (5, 15, None),       # [5:15]
     (None, None, 2),     # [::2]
     (5, 15, 2),          # [5:15:2]
+    (5, 15, 15),         # [5:15:15]
 ])
 def test_slicing(slice_params):
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
     s = slice(*slice_params)
     assert_tensor_equal(torch_tensor[s], tensor1d_tensor[s])
 
 def test_setitem():
-    torch_tensor = torch.arange(5)
+    torch_tensor = torch.arange(5, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(5)
 
     torch_tensor[2] = 10
@@ -77,7 +78,7 @@ def test_invalid_index():
     ((0, 0, 1), (None, None, 1)),  # Slice of empty slice
 ])
 def test_slice_of_slice(initial_slice, second_slice):
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
 
     torch_slice = torch_tensor[slice(*initial_slice)]
@@ -89,7 +90,7 @@ def test_slice_of_slice(initial_slice, second_slice):
     assert_tensor_equal(torch_result, tensor1d_result)
 
 def test_multiple_slices():
-    torch_tensor = torch.arange(100)
+    torch_tensor = torch.arange(100, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(100)
 
     torch_result = torch_tensor[10:90:2][5:35:3][::2]
@@ -100,7 +101,7 @@ def test_multiple_slices():
 # Test for behavior with step sizes > 1
 @pytest.mark.parametrize("step", [2, 3, 5])
 def test_slices_with_steps(step):
-    torch_tensor = torch.arange(50)
+    torch_tensor = torch.arange(50, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(50)
 
     torch_result = torch_tensor[::step][5:20]
@@ -111,7 +112,7 @@ def test_slices_with_steps(step):
 # Test for behavior with different slice sizes
 @pytest.mark.parametrize("size", [10, 20, 50, 100])
 def test_slices_with_different_sizes(size):
-    torch_tensor = torch.arange(size)
+    torch_tensor = torch.arange(size, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(size)
 
     torch_result = torch_tensor[size//4:3*size//4][::2]
@@ -121,7 +122,7 @@ def test_slices_with_different_sizes(size):
 
 # Test for behavior with overlapping slices
 def test_overlapping_slices():
-    torch_tensor = torch.arange(30)
+    torch_tensor = torch.arange(30, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(30)
 
     torch_result = torch_tensor[5:25][3:15]
@@ -131,7 +132,7 @@ def test_overlapping_slices():
 
 # Test for behavior with adjacent slices
 def test_adjacent_slices():
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
 
     torch_result = torch_tensor[5:15][0:10]
@@ -141,7 +142,7 @@ def test_adjacent_slices():
 
 # Test accessing elements, including negative indices
 def test_getitem():
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
     assert torch_tensor[0].item() == tensor1d_tensor[0].item()
     assert torch_tensor[5].item() == tensor1d_tensor[5].item()
@@ -150,7 +151,7 @@ def test_getitem():
 
 # Test setting elements, including negative indices
 def test_setitem():
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
 
     torch_tensor[0] = 100
@@ -171,7 +172,7 @@ def test_setitem():
 
 # Test setting elements indirectly (via a slice)
 def test_setitem_indirect():
-    torch_tensor = torch.arange(20)
+    torch_tensor = torch.arange(20, dtype=torch.float32)
     tensor1d_tensor = tensor1d.arange(20)
     torch_view = torch_tensor[5:15]
     tensor1d_view = tensor1d_tensor[5:15]
