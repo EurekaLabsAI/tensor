@@ -208,7 +208,6 @@ char* tensor_to_string(Tensor* t) {
 void tensor_print(Tensor* t) {
     char* str = tensor_to_string(t);
     printf("%s\n", str);
-    free(str);
 }
 
 void tensor_free(Tensor* t) {
@@ -232,5 +231,10 @@ int main(int argc, char *argv[]) {
     // print element -1
     float val = tensor_getitem(ss, -1);
     printf("ss[-1] = %.1f\n", val);
+
+    tensor_free(ss);
+    tensor_free(s);
+    tensor_free(t);
+    
     return 0;
 }
