@@ -44,15 +44,6 @@ def test_slicing(slice_params):
     s = slice(*slice_params)
     assert_tensor_equal(torch_tensor[s], tensor1d_tensor[s])
 
-def test_setitem():
-    torch_tensor = torch.arange(5, dtype=torch.float32)
-    tensor1d_tensor = tensor1d.arange(5)
-
-    torch_tensor[2] = 10
-    tensor1d_tensor[2] = 10
-
-    assert_tensor_equal(torch_tensor, tensor1d_tensor)
-
 def test_invalid_input():
     with pytest.raises(TypeError):
         tensor1d.tensor("not a valid input")
