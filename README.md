@@ -25,7 +25,7 @@ t = tensor1d.arange(20)
 
 # getitem / setitem functionality
 print(t[3]) # prints 3.0
-t[-1] = 100 # sets the last element to 100.0
+t[-1] = 100.0 # sets the last element to 100.0
 
 # slicing, prints [5, 7, 9, 11, 13]
 print(t[5:15:2])
@@ -33,6 +33,16 @@ print(t[5:15:2])
 # slice of a slice works ok! prints [9, 11, 13]
 # (note how the end range is oob and gets cropped)
 print(t[5:15:2][2:7])
+
+# add a scalar to the whole tensor
+t = t + 10.0
+
+# add two tensors (of the same size) together
+t2 = tensor1d.arange(20)
+t3 = t + t2
+
+# add two tensors together with broadcasting
+t4 = t + tensor1d.tensor([10.0])
 ```
 
 Finally the tests use [pytest](https://docs.pytest.org/en/stable/) and can be found in [test_tensor1d.py](test_tensor1d.py). You can run this as `pytest test_tensor1d.py`.
@@ -44,7 +54,6 @@ Actual production-grade tensors like `torch.Tensor` have a lot more functionalit
 TODOs:
 
 - bring our own implementation closer to `torch.Tensor`
-- implement a few simple ops like add, multiply, etc.
 - make tests better
 - implement 2D tensor, where we have to start worrying about 2D shapes/strides
 - implement broadcasting for 2D tensor

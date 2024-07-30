@@ -176,3 +176,37 @@ def test_setitem_indirect():
     tensor1d_view[-1] = 200
     assert_tensor_equal(torch_tensor, tensor1d_tensor)
 
+# test addition
+def test_addition():
+
+    # simple element-wise addition
+    torch_tensor = torch.arange(20, dtype=torch.float32)
+    tensor1d_tensor = tensor1d.arange(20)
+    torch_result = torch_tensor + 5.0
+    tensor1d_result = tensor1d_tensor + 5.0
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+    # now test adding a float
+    torch_result = torch_tensor + 6.0
+    tensor1d_result = tensor1d_tensor + 6.0
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+    # test broadcasting add with a 1-element tensor on the right
+    torch_result = torch_tensor + torch.tensor([123.0])
+    tensor1d_result = tensor1d_tensor + tensor1d.tensor([123.0])
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+    # and on the left
+    torch_result = torch.tensor([42.0]) + torch_tensor
+    tensor1d_result = tensor1d.tensor([42.0]) + tensor1d_tensor
+    assert_tensor_equal(torch_result, tensor1d_result)
+
+    # and now test invalid cases
+    with pytest.raises(TypeError):
+        tensor1d_tensor + "not a valid input"
+
+    with pytest.raises(TypeError):
+        tensor1d_tensor + [1, 2, 3]
+
+    with pytest.raises(ValueError):
+        tensor1d_tensor + tensor1d.arange(5)
