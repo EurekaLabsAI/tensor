@@ -10,6 +10,7 @@ gcc -O3 -shared -fPIC -o libtensor1d.so tensor1d.c
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
 #include <assert.h>
 #include "tensor1d.h"
