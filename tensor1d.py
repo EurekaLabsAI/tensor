@@ -28,6 +28,8 @@ Tensor* tensor_arange(int size);
 char* tensor_to_string(Tensor* t);
 void tensor_print(Tensor* t);
 Tensor* tensor_slice(Tensor* t, int start, int end, int step);
+Tensor* tensor_addf(Tensor* t, float val);
+Tensor* tensor_add(Tensor* t1, Tensor* t2);
 void tensor_incref(Tensor* t);
 void tensor_decref(Tensor* t);
 void tensor_free(Tensor* t);
@@ -78,6 +80,17 @@ class Tensor:
             lib.tensor_setitem(self.tensor, key, float(value))
         else:
             raise TypeError("Invalid index type")
+
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            c_tensor = lib.tensor_addf(self.tensor, float(other))
+        elif isinstance(other, Tensor):
+            c_tensor = lib.tensor_add(self.tensor, other.tensor)
+        else:
+            raise TypeError("Invalid type for addition")
+        if c_tensor == ffi.NULL:
+            raise ValueError("RuntimeError: tensor add returned NULL")
+        return Tensor(c_tensor=c_tensor)
 
     def __len__(self):
         return self.tensor.size

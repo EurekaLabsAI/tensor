@@ -10,6 +10,7 @@ gcc -O3 -shared -fPIC -o libtensor1d.so tensor1d.c
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
 #include <assert.h>
 #include "tensor1d.h"
@@ -191,6 +192,43 @@ Tensor* tensor_slice(Tensor* t, int start, int end, int step) {
     return s;
 }
 
+Tensor* tensor_addf(Tensor* t, float val) {
+    // adds a float to each element of the tensor, returns a new tensor
+    Tensor* result = tensor_empty(t->size);
+    for (int i = 0; i < t->size; i++) {
+        float old_val = tensor_getitem(t, i);
+        float new_val = old_val + val;
+        tensor_setitem(result, i, new_val);
+    }
+    return result;
+}
+
+bool broadcastable(Tensor* t1, Tensor* t2) {
+    // two tensors broadcast if, in each dimension (we only have 1 here)
+    // tensors either have the same size, or one of their sizes is 1
+    return t1->size == t2->size || t1->size == 1 || t2->size == 1;
+}
+
+Tensor* tensor_add(Tensor* t1, Tensor* t2) {
+    if (!broadcastable(t1, t2)) { return NULL; }
+    int result_size = max(t1->size, t2->size);
+    Tensor* result = tensor_empty(result_size);
+    int t1_index = 0;
+    int t2_index = 0;
+    int t1_stride = t1->size > 1 ? 1 : 0; // either we walk this tensor or not
+    int t2_stride = t2->size > 1 ? 1 : 0; // either we walk this tensor or not
+    // walk the output tensor and add the values
+    for (int result_index = 0; result_index < result_size; result_index++) {
+        float val1 = tensor_getitem(t1, t1_index);
+        float val2 = tensor_getitem(t2, t2_index);
+        float val = val1 + val2;
+        tensor_setitem(result, result_index, val);
+        t1_index += t1_stride;
+        t2_index += t2_stride;
+    }
+    return result;
+}
+
 char* tensor_to_string(Tensor* t) {
     // if we already have a string representation, return it
     if (t->repr != NULL) { return t->repr; }
@@ -242,6 +280,6 @@ int main(int argc, char *argv[]) {
     tensor_free(ss);
     tensor_free(s);
     tensor_free(t);
-    
+
     return 0;
 }
