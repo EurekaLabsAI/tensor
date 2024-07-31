@@ -31,7 +31,7 @@ t[-1] = 100.0 # sets the last element to 100.0
 print(t[5:15:2])
 
 # slice of a slice works ok! prints [9, 11, 13]
-# (note how the end range is oob and gets cropped)
+# (note how the end range is ood and gets cropped)
 print(t[5:15:2][2:7])
 
 # add a scalar to the whole tensor
