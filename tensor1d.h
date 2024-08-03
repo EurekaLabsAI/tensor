@@ -35,8 +35,6 @@ void tensor_print(Tensor* t);
 Tensor* tensor_slice(Tensor* t, int start, int end, int step);
 Tensor* tensor_addf(Tensor* t, float val);
 Tensor* tensor_add(Tensor* t1, Tensor* t2);
-void tensor_incref(Tensor* t);
-void tensor_decref(Tensor* t);
 void tensor_free(Tensor* t);
 
 #endif // TENSOR1D_H
