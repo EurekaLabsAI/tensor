@@ -163,6 +163,7 @@ Tensor *reshape(Tensor *t, int nrows, int ncols) {
                 "ValueError: cannot reshape tensor of size: %d to tensor of "
                 "size: %d",
                 t->size, nrows * ncols);
+        return NULL;
     }
     Tensor *view = mallocCheck(sizeof(Tensor));
     view->storage = t->storage;
@@ -186,9 +187,46 @@ Tensor *tensor_arange(int size) {
     return t;
 }
 
+Tensor *tensor_addf(Tensor *t, float val) {
+    Tensor *result = tensor_empty(t->nrows, t->ncols);
+    for (int i = 0; i < t->nrows; i++) {
+        for (int j = 0; j < t->ncols; j++) {
+            float old_val = tensor_getitem(t, i, j);
+            tensor_setitem(result, i, j, old_val + val);
+        }
+    }
+    return result;
+}
+
+// add two tensors of similar shape; doesn't support broadcasting
+Tensor *tensor_add(Tensor *t1, Tensor *t2) {
+    if (t1->nrows != t2->nrows && t1->ncols != t2->ncols) {
+        fprintf(stderr,
+                "ValueError: incompatible shapes. cannot add tensor of shape "
+                "(%d, %d) to tensor of shape (%d, %d)\n",
+                t1->nrows, t1->ncols, t2->nrows, t2->ncols);
+        return NULL;
+    }
+    Tensor *result = tensor_empty(t1->nrows, t1->ncols);
+    for (int i = 0; i < t1->nrows; i++) {
+        for (int j = 0; j < t1->ncols; j++) {
+            float val1 = tensor_getitem(t1, i, j);
+            float val2 = tensor_getitem(t2, i, j);
+            tensor_setitem(result, i, j, val1 + val2);
+        }
+    }
+    return result;
+}
+
 void tensor_print(Tensor *t) {
     char *str = tensor_to_string(t);
     printf("%s\n", str);
+}
+
+void tensor_free(Tensor *t) {
+    storage_decref(t->storage);
+    free(t->repr);
+    free(t);
 }
 
 int main(int argc, char *argv[]) {
@@ -199,5 +237,12 @@ int main(int argc, char *argv[]) {
     Tensor *t2 = reshape(t, 5, 2);
     printf("Tensor shape: (%d, %d)\n", t2->nrows, t2->ncols);
     tensor_print(t2);
+
+    Tensor *t3 = tensor_add(t2, t2);
+    tensor_print(t3);
+
+    tensor_free(t);
+    tensor_free(t2);
+    tensor_free(t3);
     return 0;
 }
