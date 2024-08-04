@@ -16,13 +16,16 @@ all: tensor1d libtensor1d.so
 tensor1d: tensor1d.c tensor1d.h
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
+tensor2d: tensor2d.c tensor2d.h
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
 # Create shared library
 libtensor1d.so: tensor1d.c tensor1d.h
 	$(CC) $(CFLAGS) -shared -fPIC -o $@ $< $(LDFLAGS)
 
 # Clean up build artifacts
 clean:
-	rm -f tensor1d libtensor1d.so
+	rm -f tensor1d tensor2d libtensor1d.so
 
 # Test using pytest
 test:
