@@ -1,5 +1,5 @@
 .DS_Store
 .cache
-libtensor.so
+libtensor1d.so
 tensor1d
 tensor2d
