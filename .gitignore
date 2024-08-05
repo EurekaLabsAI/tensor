@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__
+.venv
+.cache
+libtensor1d.so
+libtensor2d.so
+tensor1d
+tensor2d
