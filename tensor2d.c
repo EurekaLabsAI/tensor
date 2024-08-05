@@ -70,7 +70,8 @@ void storage_decref(Storage *s) {
 Tensor *tensor_empty(int nrows, int ncols) {
     Tensor *t = mallocCheck(sizeof(Tensor));
     t->storage = storage_new(nrows * ncols);
-    t->offset = 0;
+    t->offset[0] = 0;
+    t->offset[1] = 0;
     t->nrows = nrows;
     t->ncols = ncols;
     t->size = nrows * ncols;
@@ -82,8 +83,8 @@ Tensor *tensor_empty(int nrows, int ncols) {
 }
 
 int logical_to_physical(Tensor *t, int row, int col) {
-    // TODO: support sliced indexing
-    int index = row * t->stride[0] + col * t->stride[1];
+    int index =
+        t->offset[0] + row * t->stride[0] + t->offset[1] + col * t->stride[1];
     return index;
 }
 
@@ -172,6 +173,8 @@ Tensor *reshape(Tensor *t, int nrows, int ncols) {
     // row major ordering
     view->stride[0] = ncols;
     view->stride[1] = 1;
+    view->offset[0] = 0;
+    view->offset[1] = 0;
     view->repr = NULL;
     storage_incref(view->storage);
     return view;
@@ -184,6 +187,43 @@ Tensor *tensor_arange(int size) {
         tensor_setitem(t, 0, i, (float)i);
     }
     return t;
+}
+
+// t[rstart:rstop:rend, cstart:cend:cstep]
+Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
+                     int cend, int cstep) {
+    // 1) handle negative indices by wrapping around
+    if (rstart < 0) rstart = t->nrows + rstart;
+    if (rend < 0) rend = t->nrows + rend;
+    if (cstart < 0) cstart = t->ncols + cstart;
+    if (cend < 0) cend = t->ncols + cend;
+    // 2) handle out-of-bounds indices: clip to [0, t->nrows] and [0, t->ncols]
+    rstart = min(max(rstart, 0), t->nrows);
+    rend = min(max(rend, 0), t->nrows);
+    cstart = min(max(cstart, 0), t->ncols);
+    cend = min(max(cend, 0), t->ncols);
+    // 3) handle step
+    if (rstep == 0 || cstep == 0) {
+        fprintf(stderr, "ValueError: slice step cannot be zero\n");
+        return tensor_empty(0, 0);
+    }
+    if (rstep < 0 || cstep < 0) {
+        fprintf(stderr, "ValueError: slice step cannot be negative\n");
+        return tensor_empty(0, 0);
+    }
+    // create a new view of the Tensor t.
+    Tensor *view = mallocCheck(sizeof(Tensor));
+    view->storage = t->storage;
+    view->nrows = ceil_div(rend - rstart, rstep);
+    view->ncols = ceil_div(cend - cstart, cstep);
+    view->size = view->nrows * view->ncols;
+    view->offset[0] = t->offset[0] + rstart * t->stride[0];
+    view->offset[1] = t->offset[1] + cstart * t->stride[1];
+    view->stride[0] = t->stride[0] * rstep;
+    view->stride[1] = t->stride[1] + cstep;
+    view->repr = NULL;
+    storage_incref(view->storage);
+    return view;
 }
 
 Tensor *tensor_addf(Tensor *t, float val) {
@@ -268,18 +308,14 @@ void tensor_free(Tensor *t) {
 int main(int argc, char *argv[]) {
     Tensor *t = tensor_arange(10);
     Tensor *t2 = reshape(t, 5, 2);
-    printf("t2 shape: (%d, %d)\n", t2->nrows, t2->ncols);
+    printf("shape: (%d, %d)\n", t2->nrows, t2->ncols);
     tensor_print(t2);
 
     printf("---------------------------------\n");
 
-    Tensor *t3 = reshape(t, 2, 5);
-    printf("t3 shape: (%d, %d)\n", t3->nrows, t3->ncols);
+    Tensor *t3 = tensor_slice(t2, 1, 3, 1, 0, 2, 1);
+    printf("shape: (%d, %d)\n", t3->nrows, t3->ncols);
     tensor_print(t3);
-
-    printf("---------------------------------\n");
-    printf("dot(t1, t3)\n");
-    tensor_print(tensor_dot(t2, t3));
 
     tensor_free(t);
     tensor_free(t2);

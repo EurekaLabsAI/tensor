@@ -13,7 +13,7 @@ typedef struct {
 // The equivalent of tensor in PyTorch
 typedef struct {
     Storage *storage;
-    int offset;
+    int offset[2];
     int size;
     int nrows;
     int ncols;
@@ -28,7 +28,11 @@ void tensor_setitem(Tensor *t, int row, int col, float val);
 char *tensor_to_string(Tensor *t);
 Tensor *tensor_addf(Tensor *t, float val);
 Tensor *tensor_add(Tensor *t1, Tensor *t2);
+Tensor *tensor_mulf(Tensor *t, float val);
 Tensor *tensor_dot(Tensor *t1, Tensor *t2);
 Tensor *reshape(Tensor *t, int nrows, int ncols);
+Tensor *tensor_arange(int size);
+Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
+                     int cend, int cstep);
+void tensor_print(Tensor *t);
 #endif
-
