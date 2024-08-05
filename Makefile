@@ -10,7 +10,7 @@ CFLAGS += -Wall -Wextra -Wpedantic \
           -Wredundant-decls -Wnested-externs -Wmissing-include-dirs
 
 # Main targets
-all: tensor1d libtensor1d.so
+all: tensor1d tensor2d libtensor1d.so libtensor2d.so
 
 # Compile the main executable
 tensor1d: tensor1d.c tensor1d.h
@@ -23,9 +23,12 @@ tensor2d: tensor2d.c tensor2d.h
 libtensor1d.so: tensor1d.c tensor1d.h
 	$(CC) $(CFLAGS) -shared -fPIC -o $@ $< $(LDFLAGS)
 
+libtensor2d.so: tensor2d.c tensor2d.h
+	$(CC) $(CFLAGS) -shared -fPIC -o $@ $< $(LDFLAGS)
+
 # Clean up build artifacts
 clean:
-	rm -f tensor1d tensor2d libtensor1d.so
+	rm -f tensor1d tensor2d libtensor1d.so libtensor2d.so
 
 # Test using pytest
 test:

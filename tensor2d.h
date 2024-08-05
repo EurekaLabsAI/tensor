@@ -29,6 +29,7 @@ char *tensor_to_string(Tensor *t);
 Tensor *tensor_addf(Tensor *t, float val);
 Tensor *tensor_add(Tensor *t1, Tensor *t2);
 Tensor *tensor_mulf(Tensor *t, float val);
+Tensor *tensor_mul(Tensor *t1, Tensor *t2);
 Tensor *tensor_dot(Tensor *t1, Tensor *t2);
 Tensor *reshape(Tensor *t, int nrows, int ncols);
 Tensor *tensor_arange(int size);

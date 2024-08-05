@@ -270,6 +270,23 @@ Tensor *tensor_mulf(Tensor *t, float val) {
     return result;
 }
 
+// element-wise multiplication
+Tensor *tensor_mul(Tensor *t1, Tensor *t2) {
+    if ((t1->nrows != t2->nrows) || (t1->ncols != t2->ncols)) {
+        fprintf(stderr, "ValueError: shapes not equal\n");
+        return NULL;
+    }
+    Tensor *result = tensor_empty(t1->nrows, t1->ncols);
+    for (int i = 0; i < t1->nrows; i++) {
+        for (int j = 0; j < t1->ncols; j++) {
+            float val1 = tensor_getitem(t1, i, j);
+            float val2 = tensor_getitem(t2, i, j);
+            tensor_setitem(result, i, j, val1 * val2);
+        }
+    }
+    return result;
+}
+
 // similar to np.dot(t1, t2)
 Tensor *tensor_dot(Tensor *t1, Tensor *t2) {
     if (t1->ncols != t2->nrows) {
