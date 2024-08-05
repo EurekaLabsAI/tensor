@@ -62,7 +62,9 @@ class Tensor:
                 for j, val2 in enumerate(val):
                     lib.tensor_setitem(self.tensor, i, j, float(val2))
         else:
-            raise TypeError("Input must be an integer size or a list/range of values")
+            raise TypeError(
+                "Input must be a tuple (nrows, ncols) or a list/range of values"
+            )
         self.shape = (self.tensor.nrows, self.tensor.ncols)
 
     def __del__(self):
@@ -74,23 +76,26 @@ class Tensor:
 
     def __getitem__(self, key):
         # same as tensor.item() in pytorch
+        print(key)
         if isinstance(key, tuple):
-            value = lib.tensor_getitem(self.tensor, key[0], key[1])
-            return value
-        elif isinstance(key, list(slice)):
-            # assign default values to start, stop, and step
-            rstart = key[0].start if key[0].start is not None else 0
-            rstop = key[0].stop if key[0].stop is None else self.tensor.size
-            rstep = key[0].step if key[0].step is None else 1
-            cstart = key[1].start if key[1].start is not None else 0
-            cstop = key[1].stop if key[1].stop is None else self.tensor.size
-            cstep = key[1].step if key[1].step is None else 1
+            if isinstance(key[0], int):
+                print("The keys: ", key[0], key[1])
+                value = lib.tensor_getitem(self.tensor, key[0], key[1])
+                return value
+            else:
+                # assign default values to start, stop, and step
+                rstart = key[0].start if key[0].start is not None else 0
+                rstop = key[0].stop if key[0].stop is not None else self.tensor.nrows
+                rstep = key[0].step if key[0].step is not None else 1
+                cstart = key[1].start if key[1].start is not None else 0
+                cstop = key[1].stop if key[1].stop is not None else self.tensor.ncols
+                cstep = key[1].step if key[1].step is not None else 1
 
-            # call the C function to slice the tensor
-            sliced_tensor = lib.tensor_slice(
-                self.tensor, rstart, rstop, rstep, cstart, cstop, cstep
-            )
-            return Tensor(c_tensor=sliced_tensor)  # Pass the C tensor directly
+                # call the C function to slice the tensor
+                sliced_tensor = lib.tensor_slice(
+                    self.tensor, rstart, rstop, rstep, cstart, cstop, cstep
+                )
+                return Tensor(c_tensor=sliced_tensor)  # Pass the C tensor directly
         else:
             raise TypeError("Invalid index type")
 
@@ -117,9 +122,7 @@ class Tensor:
         elif isinstance(other, Tensor):
             c_tensor = lib.tensor_mul(self.tensor, other.tensor)
         else:
-            raise TypeError(
-                "Invalid type of multiplication."
-            )
+            raise TypeError("Invalid type of multiplication.")
         if c_tensor == ffi.NULL:
             raise ValueError("RuntimeError: tensor mul returned NULL")
 
@@ -150,24 +153,24 @@ class Tensor:
             raise ValueError("RuntimeError: tensor reshape returned NULL")
         return Tensor(c_tensor=c_tensor)
 
-    # returns a linear list; just as it is stored in memory
+    # similar to ndarray.tolist()
     def tolist(self):
-        return [
-            lib.tensor_getitem(self.tensor, i, j)
-            for i in range(self.tensor.nrows)
-            for j in range(self.tensor.ncols)
-        ]
+        value = []
+        for i in range(self.tensor.nrows):
+            value.append([])
+            for j in range(self.tensor.ncols):
+                value[i].append(lib.tensor_getitem(self.tensor, i, j))
+        return value
 
 
 def empty(shape=(None, None)):
     return Tensor(size_or_data=shape)
 
 
-def arange(size=(None, None)):
-    c_tensor = lib.tensor_arange(size[0] * size[1])
-    c_tensor = lib.reshape(c_tensor, size[0], size[1])
+def arange(size):
+    c_tensor = lib.tensor_arange(size)
     return Tensor(c_tensor=c_tensor)
 
 
-def tensor(data=[]):
+def tensor(data):
     return Tensor(size_or_data=data)

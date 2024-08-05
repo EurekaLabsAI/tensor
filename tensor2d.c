@@ -198,18 +198,26 @@ Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
     if (cstart < 0) cstart = t->ncols + cstart;
     if (cend < 0) cend = t->ncols + cend;
     // 2) handle inappropriate indices
-    if ((rstart > rend && rstep > 0) || (cstart > cend && cstep > 0)) {
-        fprintf(stderr, "ValueError: slice step cannot be positive\n");
+    if ((rstart > rend) || (cstart > cend)) {
+        fprintf(stderr, "ValueError: start index cannot be greater than end index\n");
         return tensor_empty(0, 0);
     }
-    // 3) handle out-of-bounds indices: clip to [0, t->nrows] and [0, t->ncols]
-    rstart = min(max(rstart, 0), t->nrows);
-    rend = min(max(rend, 0), t->nrows);
-    cstart = min(max(cstart, 0), t->ncols);
-    cend = min(max(cend, 0), t->ncols);
+    // 3) handle out-of-bounds indices: clip to [rstart, nrows] and [cstart,
+    // ncols]
+    rstart = min(abs(rstart), t->nrows);
+    rend = min(abs(rend), t->nrows);
+    cstart = min(abs(cstart), t->ncols);
+    cend = min(abs(cend), t->ncols);
     // 4) handle step
     if (rstep == 0 || cstep == 0) {
         fprintf(stderr, "ValueError: slice step cannot be zero\n");
+        return tensor_empty(0, 0);
+    }
+    // 5) negative step 
+    if (rstep < 0 || cstep < 0) {
+        // TODO possibly support negative step
+        // PyTorch does not support negative step (numpy does)
+        fprintf(stderr, "ValueError: slice step cannot be negative\n");
         return tensor_empty(0, 0);
     }
     // create a new view of the Tensor t.
@@ -324,14 +332,14 @@ void tensor_free(Tensor *t) {
 }
 
 int main(int argc, char *argv[]) {
-    Tensor *t = tensor_arange(10);
-    Tensor *t2 = reshape(t, 5, 2);
+    Tensor *t = tensor_arange(20);
+    Tensor *t2 = reshape(t, 10, 2);
     printf("shape: (%d, %d)\n", t2->nrows, t2->ncols);
     tensor_print(t2);
 
     printf("---------------------------------\n");
 
-    Tensor *t3 = tensor_slice(t2, 3, 1, -1, 0, 2, 1);
+    Tensor *t3 = tensor_slice(t2, 0, 10, 1, 0, 1, 1);
     printf("shape: (%d, %d)\n", t3->nrows, t3->ncols);
     tensor_print(t3);
 
