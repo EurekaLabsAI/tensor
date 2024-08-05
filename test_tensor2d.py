@@ -192,15 +192,14 @@ def test_multiplication():
         tensor2d_tensor * tensor2d.arange(5).reshape((1, 5))
 
 def test_dot_product():
-    # use numpy because torch only supports 1D dot product
-    np_array1 = np.arange(20, dtype=np.float32).reshape((5, 4))
+    torch_tensor1 = torch.arange(20, dtype=torch.float32).reshape((5,4))
+    torch_tensor2 = torch.arange(20, dtype=torch.float32).reshape((4, 5))
     tensor2d_tensor1 = tensor2d.arange(20).reshape((5, 4))
-    np_array2 = np.arange(20, dtype=np.float32).reshape((4, 5))
     tensor2d_tensor2 = tensor2d.arange(20).reshape((4, 5))
 
-    np_result = np_array1.dot(np_array2) 
+    torch_result = torch_tensor1.matmul(torch_tensor2) 
     tensor2d_result = tensor2d_tensor1.dot(tensor2d_tensor2)
-    assert_tensor_equal(np_result, tensor2d_result)
+    assert_tensor_equal(torch_result, tensor2d_result)
     # invalid cases
     with pytest.raises(ValueError):
         tensor2d_tensor1.dot(tensor2d_tensor2.reshape((5, 4)))
