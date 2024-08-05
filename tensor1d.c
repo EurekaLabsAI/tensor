@@ -33,7 +33,7 @@ void *malloc_check(size_t size, const char *file, int line) {
 
 int ceil_div(int a, int b) {
     // integer division that rounds up, i.e. ceil(a / b)
-    return (a + b - 1) / b;
+    return b > 0 ? (a + b - 1) / b : (a + b + 1) / b;
 }
 
 int min(int a, int b) {

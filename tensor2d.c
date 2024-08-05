@@ -23,7 +23,7 @@ void *malloc_check(size_t size, const char *file, int line) {
 
 int ceil_div(int a, int b) {
     // integer division that rounds up, i.e. ceil(a / b)
-    return (a + b - 1) / b;
+    return (a / b) + ((a % b) != 0);
 }
 
 int min(int a, int b) {
@@ -197,18 +197,19 @@ Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
     if (rend < 0) rend = t->nrows + rend;
     if (cstart < 0) cstart = t->ncols + cstart;
     if (cend < 0) cend = t->ncols + cend;
-    // 2) handle out-of-bounds indices: clip to [0, t->nrows] and [0, t->ncols]
+    // 2) handle inappropriate indices
+    if ((rstart > rend && rstep > 0) || (cstart > cend && cstep > 0)) {
+        fprintf(stderr, "ValueError: inappropriate indices\n");
+        return tensor_empty(0, 0);
+    }
+    // 3) handle out-of-bounds indices: clip to [0, t->nrows] and [0, t->ncols]
     rstart = min(max(rstart, 0), t->nrows);
     rend = min(max(rend, 0), t->nrows);
     cstart = min(max(cstart, 0), t->ncols);
     cend = min(max(cend, 0), t->ncols);
-    // 3) handle step
+    // 4) handle step
     if (rstep == 0 || cstep == 0) {
         fprintf(stderr, "ValueError: slice step cannot be zero\n");
-        return tensor_empty(0, 0);
-    }
-    if (rstep < 0 || cstep < 0) {
-        fprintf(stderr, "ValueError: slice step cannot be negative\n");
         return tensor_empty(0, 0);
     }
     // create a new view of the Tensor t.
@@ -220,7 +221,7 @@ Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
     view->offset[0] = t->offset[0] + rstart * t->stride[0];
     view->offset[1] = t->offset[1] + cstart * t->stride[1];
     view->stride[0] = t->stride[0] * rstep;
-    view->stride[1] = t->stride[1] + cstep;
+    view->stride[1] = t->stride[1] * cstep;
     view->repr = NULL;
     storage_incref(view->storage);
     return view;
@@ -313,7 +314,8 @@ int main(int argc, char *argv[]) {
 
     printf("---------------------------------\n");
 
-    Tensor *t3 = tensor_slice(t2, 3, 1, 1, 0, 2, 1);
+    // (-2, -1)
+    Tensor *t3 = tensor_slice(t2, 3, 1, -1, 0, 2, 1);
     printf("shape: (%d, %d)\n", t3->nrows, t3->ncols);
     tensor_print(t3);
 
