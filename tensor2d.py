@@ -36,6 +36,7 @@ Tensor *reshape(Tensor *t, int nrows, int ncols);
 Tensor *tensor_arange(int size);
 Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
                      int cend, int cstep);
+void tensor_free(Tensor *t);
 """
 )
 lib = ffi.dlopen(
@@ -67,7 +68,7 @@ class Tensor:
     def __del__(self):
         # TODO: when Python intepreter is shutting down, lib can become None
         # I'm not 100% sure how to do cleanup in cffi here properly
-        if lib is not None:
+        if (lib is not None) and ("tensor_free" in lib.__dict__.keys()):
             if hasattr(self, "tensor"):
                 lib.tensor_free(self.tensor)
 
