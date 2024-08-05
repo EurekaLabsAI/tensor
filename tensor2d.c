@@ -199,7 +199,7 @@ Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
     if (cend < 0) cend = t->ncols + cend;
     // 2) handle inappropriate indices
     if ((rstart > rend && rstep > 0) || (cstart > cend && cstep > 0)) {
-        fprintf(stderr, "ValueError: inappropriate indices\n");
+        fprintf(stderr, "ValueError: slice step cannot be positive\n");
         return tensor_empty(0, 0);
     }
     // 3) handle out-of-bounds indices: clip to [0, t->nrows] and [0, t->ncols]
@@ -314,7 +314,6 @@ int main(int argc, char *argv[]) {
 
     printf("---------------------------------\n");
 
-    // (-2, -1)
     Tensor *t3 = tensor_slice(t2, 3, 1, -1, 0, 2, 1);
     printf("shape: (%d, %d)\n", t3->nrows, t3->ncols);
     tensor_print(t3);
