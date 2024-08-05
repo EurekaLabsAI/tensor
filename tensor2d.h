@@ -34,5 +34,4 @@ Tensor *reshape(Tensor *t, int nrows, int ncols);
 Tensor *tensor_arange(int size);
 Tensor *tensor_slice(Tensor *t, int rstart, int rend, int rstep, int cstart,
                      int cend, int cstep);
-void tensor_print(Tensor *t);
 #endif

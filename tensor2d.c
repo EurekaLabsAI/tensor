@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
 
     printf("---------------------------------\n");
 
-    Tensor *t3 = tensor_slice(t2, 1, 3, 1, 0, 2, 1);
+    Tensor *t3 = tensor_slice(t2, 3, 1, 1, 0, 2, 1);
     printf("shape: (%d, %d)\n", t3->nrows, t3->ncols);
     tensor_print(t3);
 
