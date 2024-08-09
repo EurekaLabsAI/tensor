@@ -296,7 +296,7 @@ void tensor_free(Tensor* t) {
 // ----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
-    // tensor empty?
+    // tensor empty
     Tensor* te = tensor_empty(20);
     tensor_print(te);
     // tensor zeros
