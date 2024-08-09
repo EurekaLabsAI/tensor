@@ -23,6 +23,12 @@ def test_empty(size):
     tensor1d_tensor = tensor1d.empty(size)
     assert len(torch_tensor) == len(tensor1d_tensor)
 
+@pytest.mark.parametrize("size", [0, 1, 10, 100])
+def test_zeros(size):
+    torch_tensor = torch.zeros(size)
+    tensor1d_tensor = tensor1d.zeros(size)
+    assert len(torch_tensor) == len(tensor1d_tensor)
+
 @pytest.mark.parametrize("index", range(1, 10))
 def test_indexing(index):
     torch_tensor = torch.arange(10, dtype=torch.float32)

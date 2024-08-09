@@ -28,6 +28,16 @@ void *malloc_check(size_t size, const char *file, int line) {
 }
 #define mallocCheck(size) malloc_check(size, __FILE__, __LINE__)
 
+void *calloc_check(size_t size, size_t elem_size, const char *file, int line) {
+    void *ptr = calloc(size, elem_size);
+    if (ptr == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed at %s:%d\n", file, line);
+        exit(EXIT_FAILURE);
+    }
+    return ptr;
+}
+#define callocCheck(size, elem_size) calloc_check(size, elem_size, __FILE__, __LINE__)
+
 // ----------------------------------------------------------------------------
 // utils
 
@@ -53,6 +63,15 @@ Storage* storage_new(int size) {
     assert(size >= 0);
     Storage* storage = mallocCheck(sizeof(Storage));
     storage->data = mallocCheck(size * sizeof(float));
+    storage->data_size = size;
+    storage->ref_count = 1;
+    return storage;
+}
+
+Storage* storage_zeros(int size) {
+    assert(size >= 0);
+    Storage* storage = mallocCheck(sizeof(Storage));
+    storage->data = callocCheck(size, sizeof(float));
     storage->data_size = size;
     storage->ref_count = 1;
     return storage;
@@ -87,6 +106,19 @@ void storage_decref(Storage* s) {
 Tensor* tensor_empty(int size) {
     Tensor* t = mallocCheck(sizeof(Tensor));
     t->storage = storage_new(size);
+    // at init we cover the whole storage, i.e. range(start=0, stop=size, step=1)
+    t->offset = 0;
+    t->size = size;
+    t->stride = 1;
+    // holds the text representation of the tensor
+    t->repr = NULL;
+    return t;
+}
+
+// torch.zeros(size)
+Tensor* tensor_zeros(int size){
+    Tensor* t = mallocCheck(sizeof(Tensor));
+    t->storage = storage_zeros(size);
     // at init we cover the whole storage, i.e. range(start=0, stop=size, step=1)
     t->offset = 0;
     t->size = size;
@@ -264,6 +296,12 @@ void tensor_free(Tensor* t) {
 // ----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
+    // tensor empty
+    Tensor* te = tensor_empty(20);
+    tensor_print(te);
+    // tensor zeros
+    Tensor* tz = tensor_zeros(20);
+    tensor_print(tz);
     // create a tensor with 20 elements
     Tensor* t = tensor_arange(20);
     tensor_print(t);
@@ -280,6 +318,8 @@ int main(int argc, char *argv[]) {
     tensor_free(ss);
     tensor_free(s);
     tensor_free(t);
+    tensor_free(te);
+    tensor_free(tz);
 
     return 0;
 }
